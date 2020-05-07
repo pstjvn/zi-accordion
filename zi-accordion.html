@@ -1,0 +1,153 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+
+<!-- 
+Double sided element that allows to host left and right side with a devider
+between them so only one at a time will be visible. 
+
+### Styling
+
+The element requires to know how it should be positioned. You can either
+make it fit the container it is in (`class="fit"`) using `iron-flex-*` 
+or simply set `width` and `height`:
+
+```
+zi-accordion {
+  width: 200px;
+  height: 300px;
+}
+```
+
+Additionally the following custom properties are supported:
+
+Property           | Description       | Default
+-------------------|-------------------|-----------------
+`--zi-transition-duration` | The duration for the animation | 600ms
+`--zi-transition-timing` | The timing function to use for the animation |  cubic-bezier(.44,.23,.31,.99)
+
+@demo demo/index.html
+-->
+<dom-module id="zi-accordion">
+  <template>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .wrapper {
+        @apply --layout-fit;
+        overflow: hidden;
+      }
+
+      #container, #container > div {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+      }
+
+      #container.initialized {
+        transition-property: transform;
+        transition-duration: var(--zi-transition-duration, 600ms);
+        transition-timing-function: var(--zi-transition-timing, cubic-bezier(.44,.23,.31,.99));
+      }
+    </style>
+    <div class="wrapper">
+      <div id="container">
+        <div id="left"> 
+          <content select=".left-content"></content>
+        </div>
+        <div id="divider">
+          <content select=".divider-content"></content>
+        </div>
+        <div id="right">
+          <content select=".right-content"></content>
+        </div>
+      </div>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'zi-accordion',
+      properties: {
+        /** The width of the divider in pixels */
+        separatorWidth: {
+          type: Number,
+          value: 60
+        },
+        /** A flag indicating if the right side of the panel should be visible */
+        open: {
+          type: Boolean,
+          value: false
+        },
+        /** Local cache for the width of a side plane. */
+        _calculatedSideWidth: {
+          type: Number
+        },
+        /** Local flag we use to determine when is safe to start applying animations */
+        _initialSetupFinished: {
+          type: Boolean,
+          value: false
+        }
+      },
+      observers: ['_setOpen(open, _calculatedSideWidth)'],
+
+      /** @override */
+      attached: function() {
+        this.forceRecalculateStyles();
+        this.listen(this.$.container, 'transition-end', this._removeWillChange);
+      },
+
+      /** @override */
+      detached: function() {
+        this.unlisten(this.$.container, 'transition-end', this._removeWillChange);
+      },
+
+      /**
+       * Forces the component to recalculate how its containers are sized.
+       * Use this method if you indent to resize the container that holds the
+       * accordeon and the resize has completed. Note that calling this method
+       * will force layout.
+       */
+      forceRecalculateStyles: function() {
+        var hostWidth = this.getBoundingClientRect().width;
+        var leftRightSideWidth = (hostWidth - this.separatorWidth);
+        this.$.container.style.width = (
+            leftRightSideWidth + this.separatorWidth + leftRightSideWidth) + 
+            'px';
+        this.$.left.style.width = leftRightSideWidth + 'px';
+        this.$.right.style.width = leftRightSideWidth + 'px';
+        this.$.divider.style.width = this.separatorWidth + 'px';
+        this.$.divider.style.left = leftRightSideWidth + 'px';
+        this.$.right.style.left = hostWidth + 'px';
+        this._calculatedSideWidth = leftRightSideWidth;
+      },
+
+      /**
+       * Sets the styles to match the open/close state of the element.
+       */
+      _setOpen: function() {
+        if (typeof this._calculatedSideWidth == 'number') {
+          this.$.container.style.willChange = 'transform';
+          this.$.container.style.transform = (this.open ? (
+            'translateX(-' + this._calculatedSideWidth + 'px)') : 'none');
+          if (!this._initialSetupFinished) {
+            this._initialSetupFinished = true;
+            this.async(function() {
+              this.$.container.classList.add('initialized');
+            });
+          }
+        }
+      },
+
+      /**
+       * Removes the `will-change` property as the browsers have limit on the
+       * count of elements that can be layered. 
+       */
+      _removeWillChange: function() {
+        this.$.container.style.willChange = 'auto';
+      }
+    });
+  </script>
+</dom-module>

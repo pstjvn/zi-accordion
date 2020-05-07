@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>zi-accordion demo</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../paper-toggle-button/paper-toggle-button.html">
+    <link rel="import" href="../zi-accordion.html">
+
+    <style is="custom-style" include="demo-pages-shared-styles">
+    </style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic zi-accordion demo</h3>
+      <demo-snippet>
+        <template is="dom-bind">
+          <style>
+            zi-accordion {
+              height: 340px;
+              width: 100%;
+              border: 1px solid black;
+            }
+            .divider-content {
+              background-color: yellow;
+              height: 100%;
+            }
+          </style>
+          <zi-accordion open="[[_open]]">
+            <div class="left-content">Left side</div>
+            <div class="divider-content">Middle</div>
+            <div class="right-content">Right side</div>
+          </zi-accordion>
+          <input id="open" checked="{{_open::change}}" type="checkbox">
+          <label for="open">Open/close the view</label>
+        </template>
+      </demo-snippet>
+    </div>
+  </body>
+</html>
